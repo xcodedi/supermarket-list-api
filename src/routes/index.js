@@ -10,13 +10,17 @@ router.get("/", (req, res) => {
 // Defines a route to handle GET requests to fetch all list items
 router.get("/list-items", async (req, res) => {
   try {
-    const items = await ListItem.find(); // Retrieves all list items from the database
-    res.status(200).json(items); // Sends the list items as JSON in the response
+    const { username } = req.headers; // Extract 'username' from request headers
+    if (!username) {
+      return res.status(401).json({ message: "user name is required" }); // Respond with a 401 status code if 'username' is missing
+    }
+    const items = await ListItem.find({ username }); // Retrieve all list items from the database for the given 'username'
+    res.status(200).json(items); // Send the list items as JSON in the response with a 200 status code
   } catch (error) {
-    // Catches any errors that occur during the operation
+    // Catch any errors that occur during the operation
     return res
       .status(500)
-      .json({ message: "Error fetching list items", error: error.message }); // Sends an error message in case of failure
+      .json({ message: "Error fetching list items", error: error.message }); // Respond with a 500 status code and an error message
   }
 });
 
@@ -24,6 +28,7 @@ router.get("/list-items", async (req, res) => {
 router.post("/list-items", async (req, res) => {
   try {
     const { name, quantity, checked } = req.body; // Extracts name, quantity, and checked fields from the request body
+    const { username } = req.headers; // Extracts 'username' from request headers
 
     // Validates the input
     if (!name || name.length < 3) {
@@ -38,9 +43,10 @@ router.post("/list-items", async (req, res) => {
     }
 
     // Creates a new list item
-    const newItem = new ListItem({ name, quantity, checked });
+    const newItem = new ListItem({ name, quantity, checked, username });
     await newItem.save(); // Saves the new list item to the database
-    res.status(201).json(newItem); // Sends the newly created list item as JSON in the response
+
+    res.status(201).json(newItem); // Sends the newly created list item as JSON in the response with all fields
   } catch (error) {
     // Catches any errors that occur during the operation
     return res
@@ -54,6 +60,8 @@ router.put("/list-items/:id", async (req, res) => {
   try {
     const { name, quantity, checked } = req.body; // Extracts variables from the request body
     const itemId = req.params.id; // Extracts the item ID from the request parameters
+    const { username } = req.headers; // Extracts 'username' from request headers
+
     const updatedItem = await ListItem.findByIdAndUpdate(
       // Finds and updates the list item in the database
       itemId,
@@ -61,6 +69,7 @@ router.put("/list-items/:id", async (req, res) => {
         name,
         quantity,
         checked: checked || false, // Sets the checked field to false if it's not provided
+        username,
       },
       { new: true }
     );

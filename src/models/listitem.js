@@ -5,6 +5,7 @@ const listitemSchema = new mongoose.Schema({
   name: String, // Define the name field as a string
   quantity: Number, // Define the quantity field as a number
   checked: Boolean, // Define the checked field as a boolean
+  username: String, // Define the 'username' field as a string type.
 });
 
 // Export the model using the schema, with the name "list_item"
